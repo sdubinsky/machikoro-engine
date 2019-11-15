@@ -44,7 +44,7 @@ processUpdateInput :: UpdateCommand -> Board -> Board
 
 
 initialDeck :: Deck
---makeField :: Board -> Board
+dealField :: Board -> Int -> Board
 moveCardToPlayer :: Card -> Player -> Board -> Board
 updatePlayerList :: Player -> [Player] -> [Player]
 addCardToField :: Card -> Field -> Field
@@ -53,14 +53,28 @@ addCardToField :: Card -> Field -> Field
   -- if it's a red card, subtract from the first player's total.
   -- return new players with the updated totals
 
-initialBoard = 
-  Board {players = [],
-                  deck = [],
-                  field = [] ,
-                  turnHistory = []
-                 }
+initialBoard =
+  let baseBoard = Board {players = [],
+                          deck = initialDeck,
+                          field = [],
+                          turnHistory = []
+                        }
+      board = dealField baseBoard 10
+  in
+    board
 initialDeck =
   [Card{cardName = "Card" ++ show x, cardDescription = "carddesc" ++ show x} | x <- [0..100]]
+
+dealField baseBoard maxLength =
+  if length (field baseBoard) >= maxLength
+  then baseBoard
+  else
+    let card = head $ deck baseBoard
+        newDeck = tail $ deck baseBoard
+        newField = addCardToField card $ field baseBoard
+        newBoard = baseBoard { deck = newDeck, field = newField }
+    in dealField newBoard maxLength
+  
 parseCommand input
   | input == "field" = Left ShowField
   | input == "hands" = Left ShowHands
