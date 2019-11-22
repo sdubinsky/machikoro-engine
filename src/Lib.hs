@@ -31,7 +31,7 @@ data Turn = Turn {activePlayer :: Player,
 
 -- commands that just print to the screen.  Includes error, for simplicity
 data ShowCommand = ShowHands | ShowField | ShowHistory | InvalidCommand deriving (Show, Eq)
-data UpdateCommand
+data UpdateCommand = MoveCardToPlayer
 type Deck = [Card] -- the deck we draw from
 type Field = [FieldCard] -- the ten faceup cards
 type Hand = [Card] -- the cards the player bought from the field
@@ -48,6 +48,7 @@ dealField :: Board -> Int -> Board
 moveCardToPlayer :: Card -> Player -> Board -> Board
 updatePlayerList :: Player -> [Player] -> [Player]
 addCardToField :: Card -> Field -> Field
+findCardByName :: String -> [Card] -> Card
  -- processRoll: take a card and two players.  For the second player,
   -- take their hand.  Check every card.  If it activates, add to their score.
   -- if it's a red card, subtract from the first player's total.
@@ -79,6 +80,7 @@ parseCommand input
   | input == "field" = Left ShowField
   | input == "hands" = Left ShowHands
   | input == "history" = Left ShowHistory
+  | input == "buy" = Right MoveCardToPlayer
   | otherwise = Left InvalidCommand
 
 processShowInput option board
@@ -87,7 +89,20 @@ processShowInput option board
   | option == ShowHistory = show $ turnHistory board
   | option == InvalidCommand = "Error: Invalid Command"
 
-processUpdateInput option board = undefined
+processUpdateInput option board 
+  | option == MoveCardToPlayer = processMoveCardToPlayer board
+  | otherwise = do
+      putStrLn "Error: Invalid Command"
+      board
+
+processMoveCardToPlayer board = do
+  putStrLn "Which card do you want to move?"
+  cardName <- getLine
+  myCard <- findCardByName cardName $ field board
+  putStrLn "Which player gets the card?"
+  playerName <- getLine
+  myPlayer <- findPlayerByName playerName $ players board
+  moveCardToPlayer myCard myPlayer board
     
 moveCardToPlayer card player board =
   let newCard = head $ deck board
@@ -116,3 +131,10 @@ deleteCardFromField card (x:xs)
                         else xs
   | otherwise = x : deleteCardFromField card xs
 
+findCardByName name (x:xs)
+  | cardName x == name = x
+  | otherwise = findCardByName name xs
+
+findPlayerByName name (x:xs)
+  | playerName x == name = x
+  | otherwise = findPlayerByName name xs

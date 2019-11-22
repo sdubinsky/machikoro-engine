@@ -35,6 +35,8 @@ executables:
     - -with-rtsopts=-N
     dependencies:
     - machikoro-engine
+    - regex-tdfa
+    - regex-tdfa-text
 
 tests:
   machikoro-engine-test:
