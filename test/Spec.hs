@@ -1,4 +1,4 @@
-import Lib
+import Parser
 import Test.HUnit
 
 testCard = Card {cardName = "Test", cardDescription = "TestCard"}

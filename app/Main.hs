@@ -1,11 +1,12 @@
 module Main where
 
-import Lib
+import Parser
+import Board
 
 main :: IO ()
 loop :: Board -> IO ()
 main =
-  loop Lib.initialBoard
+  loop initialBoard
   
 -- https://stackoverflow.com/questions/55755738/haskell-how-do-you-make-a-loop-that-has-getline-within-it
 loop board = do
@@ -14,9 +15,9 @@ loop board = do
   if input == "end"
     then putStrLn $ "goodbye" -- end
     else
-    case parseCommand input of
-      Left command -> do
-        putStrLn $ Lib.processShowInput command board
+    case parseCommand input board of
+      Left str -> do
+        putStrLn str
         loop board
-      Right command -> do
-        loop $ Lib.processUpdateInput command board
+      Right newBoard -> do
+        loop newBoard
