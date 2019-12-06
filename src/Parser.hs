@@ -11,6 +11,9 @@ parseCommand :: String -> Board -> ParseResult
 parseUpdateInput :: [String] -> Board -> ParseResult
 parseMoveCardToPlayer :: [String] -> Board -> ParseResult
 parseAddPlayer :: [String] -> Board -> ParseResult
+parseActivate :: [String] -> Board -> ParseResult
+matchByName :: (a -> String) -> String -> [a] -> Either String a
+updateList :: (Eq a) => a -> [a] -> [a]
 
  -- processRoll: take a card and two players.  For the second player,
   -- take their hand.  Check every card.  If it activates, add to their score.
@@ -20,32 +23,62 @@ parseAddPlayer :: [String] -> Board -> ParseResult
 parseCommand input board =
   let inputs = words input in
     case head inputs of 
-      "field" -> Left $ show $ field board
-      "hands" -> Left $ show [show $ hand x | x <- players board]
+      "field"   -> Left $ show $ field board
+      "players" -> Left $ show $ players board
+      "hands"   -> Left $ show [show $ hand x | x <- players board]
       "history" -> Left $ show $ turnHistory board
-      "board" -> Left $ show board
-      _ -> parseUpdateInput inputs board
+      "board"   -> Left $ show board
+      "help"    -> Left "Available commands:\n  field\n  players\n  hands\n  board\n  move\n  add\n  activate\n  help"
+      _         -> parseUpdateInput inputs board
 
-parseUpdateInput inputs board =
-  case head inputs of
-        "move" -> parseMoveCardToPlayer (tail inputs) board
-        "add" -> parseAddPlayer (tail inputs) board
-        _ -> Left $ "incorrect command: " ++ (show inputs)
+parseUpdateInput [] _ = Left $ "Invalid input"
+parseUpdateInput [x] _ = Left $ "Incorrect command: " ++ (show x)
+parseUpdateInput (command:params) board =
+  case command of
+        "move" -> parseMoveCardToPlayer params board
+        "add" -> parseAddPlayer params board
+        "activate" -> parseActivate params board
+        _ -> Left $ "incorrect command: " ++ command ++ " " ++ (show params)
 
-parseMoveCardToPlayer inputs board =
+parseMoveCardToPlayer [] _ = Left "Error: no card specified"
+parseMoveCardToPlayer [x] _ = Left $ "Incorrect command: " ++ (show x)
+parseMoveCardToPlayer (cName: pName:_) board =
   do
-    card <- findFieldCardByName (head inputs) (field board)
-    player <- findPlayerByName (head $ tail inputs) (players board)
+    card <- findFieldCardByName cName (field board)
+    player <- matchByName playerName pName (players board)
     let cost = cardCost card in
       if cost < (cash player)
       then
-        let newPlayer = player { cash = cost - (cash player)} in
-            Right board { players = updatePlayerList newPlayer $ players board}
+        let newPlayer = player { cash = (cash player) - cost} in
+            Right $ moveCardToPlayer card newPlayer board { players = updatePlayerList newPlayer $ players board}
       else
         Left "Error: Insufficient funds"
 
-parseAddPlayer inputs board =
-  let samePlayers = filter (\x -> (head inputs) == playerName x) $ players board in
+parseAddPlayer [] _ = Left "Error: No player name specified"
+parseAddPlayer (name:_) board =
+  let samePlayers = filter (\x -> name == (playerName x)) $ players board in
     if null samePlayers
-    then Right $ addPlayer inputs board
+    then Right $ addPlayer name board
     else Left "Error: Player already exists"
+
+parseActivate [] _ = Left "Not enough arguments"
+parseActivate [_] _ = Left "Not enough arguments"
+parseActivate (iName:pName:_) board =
+  do
+    player <- matchByName playerName pName $ players board
+    imp <- matchByName impName iName $ improvements player
+    if impActive imp
+      then Left "Card already active"
+      else Right $ board {players = updateList player { improvements = updateList imp $ improvements player } $ players board}
+
+matchByName f name list =
+  let results = filter (\x -> name == f x) list
+  in
+    if null results
+    then Left $ "Error: " ++ name ++ " not found"
+    else Right $ head results
+
+updateList _ [] = []
+updateList thing (x:xs)
+  | thing == x = thing:xs
+  | otherwise = x:updateList thing xs

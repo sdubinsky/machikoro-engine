@@ -8,6 +8,8 @@ data Improvement = Improvement {impName :: String,
                    impDescription :: String,
                    impCost :: Integer,
                    impActive :: Bool} deriving Show
+instance Eq Improvement where
+  x == y = (impName x == impName y)
 
 data Card = Card {cardName :: String,
                   cardCost :: Integer,

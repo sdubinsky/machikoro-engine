@@ -27,7 +27,7 @@ dealField :: Board -> Int -> Board
 
 addCardToField :: Card -> Field -> Field
 deleteCardFromField :: Card -> Field -> Field
-addPlayer :: [String] -> Board -> Board
+addPlayer :: String -> Board -> Board
 findFieldCardByName :: String -> Field -> Either String Card
 findPlayerByName :: String -> [Player] -> Either String Player
 moveCardToPlayer :: Card -> Player -> Board -> Board
@@ -61,9 +61,8 @@ deleteCardFromField card (x:xs)
                         else xs
   | otherwise = x : deleteCardFromField card xs
 
-addPlayer inputs board =
-  let name = head inputs
-      newPlayer = Player { playerName = name, hand = [], cash = 3, improvements = initialImprovements }
+addPlayer name board =
+  let newPlayer = Player { playerName = name, hand = [], cash = 3, improvements = initialImprovements }
   in
     board { players = newPlayer : (players board) }
 
