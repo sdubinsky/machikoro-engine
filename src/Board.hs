@@ -7,10 +7,8 @@ data Board = Board {players :: [Player],
 
 data FieldCard = FieldCard {fieldCard :: Card,
                            fieldCardCount :: Int} deriving (Show, Eq)
-data Turn = Turn {activePlayer :: Player,
-                  roll :: DiceRoll,
-                  cardBought :: Card
-                 } deriving Show
+data Turn = Turn { action :: String,
+                   turnNumber :: Int } deriving Show
 
 instance Show Board where
   show (Board ps _ f _) = "Players:\n" ++ show ps ++ "\nField:\n" ++ show f
@@ -28,6 +26,7 @@ dealField :: Board -> Int -> Board
 addCardToField :: Card -> Field -> Field
 deleteCardFromField :: Card -> Field -> Field
 addPlayer :: String -> Board -> Board
+addTurn :: [String] -> Board -> Board
 findFieldCardByName :: String -> Field -> Either String Card
 findPlayerByName :: String -> [Player] -> Either String Player
 moveCardToPlayer :: Card -> Player -> Board -> Board
@@ -65,6 +64,12 @@ addPlayer name board =
   let newPlayer = Player { playerName = name, hand = [], cash = 3, improvements = initialImprovements }
   in
     board { players = newPlayer : (players board) }
+
+addTurn turn board =
+  let newTurn = Turn { action = unwords turn,
+                       turnNumber = length $ turnHistory board}
+  in
+  board { turnHistory = newTurn : (turnHistory board)}
 
 dealField baseBoard maxLength =
   if length (field baseBoard) >= maxLength

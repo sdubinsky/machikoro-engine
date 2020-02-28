@@ -22,24 +22,32 @@ updateList :: (Eq a) => a -> [a] -> [a]
 
 parseCommand input board =
   let inputs = words input in
+    if inputs == []
+    then Left ""
+    else
     case head inputs of 
       "field"   -> Left $ show $ field board
       "players" -> Left $ show $ players board
       "hands"   -> Left $ show [show $ hand x | x <- players board]
       "history" -> Left $ show $ turnHistory board
       "board"   -> Left $ show board
-      "help"    -> Left "Available commands:\n  field\n  players\n  hands\n  board\n  move\n  add\n  activate\n  help"
+      "help"    -> Left "Available commands:\n  `field`: show the faceup cards\n  `players`: show info on the players\n  `hands`: show each player's hand\n  `board`: show everything\n  `move $card $player`: Move a card to a player\n  `add $player`: Add a player to the game\n  `activate $improvement $player`: activate an improvement\n  help"
       _         -> parseUpdateInput inputs board
 
 parseUpdateInput [] _ = Left $ "Invalid input"
 parseUpdateInput [x] _ = Left $ "Incorrect command: " ++ (show x)
 parseUpdateInput (command:params) board =
-  case command of
-        "move" -> parseMoveCardToPlayer params board
-        "add" -> parseAddPlayer params board
-        "activate" -> parseActivate params board
-        _ -> Left $ "incorrect command: " ++ command ++ " " ++ (show params)
-
+  let updatedBoard =
+        case command of
+          "move" -> parseMoveCardToPlayer params board
+          "add" -> parseAddPlayer params board
+          "activate" -> parseActivate params board
+          _ -> Left $ "incorrect command: " ++ command ++ " " ++ (show params)
+  in
+    case updatedBoard of
+      Left _ -> updatedBoard
+      Right newBoard -> Right $ addTurn (command:params) newBoard
+      
 parseMoveCardToPlayer [] _ = Left "Error: no card specified"
 parseMoveCardToPlayer [x] _ = Left $ "Incorrect command: " ++ (show x)
 parseMoveCardToPlayer (cName: pName:_) board =

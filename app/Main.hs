@@ -10,7 +10,7 @@ main =
   
 -- https://stackoverflow.com/questions/55755738/haskell-how-do-you-make-a-loop-that-has-getline-within-it
 loop board = do
-  putStrLn$ ">"
+  putStrLn$ "enter command, or help:"
   input <- getLine
   if input == "end"
     then putStrLn $ "goodbye" -- end
